@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class BlueButton extends StatelessWidget {
-  const BlueButton({super.key, required this.text, required this.onPress});
+  const BlueButton({super.key, required this.text, this.onPress});
 
   final String text;
-  final VoidCallback onPress;
+  final VoidCallback? onPress;
 
   @override
   Widget build(BuildContext context) {

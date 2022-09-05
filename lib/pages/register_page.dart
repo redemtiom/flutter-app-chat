@@ -1,8 +1,11 @@
+import 'package:chat/helpers/show_alert.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:chat/widgets/blue_button.dart';
 import 'package:chat/widgets/custom_textfield.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -24,7 +27,9 @@ class RegisterPage extends StatelessWidget {
                 ),
                 _Form(),
                 Labels(
-                  route: 'login', title: '¿Ya tienes una cuenta?', subTitle: 'Ingresa ahora',
+                  route: 'login',
+                  title: '¿Ya tienes una cuenta?',
+                  subTitle: 'Ingresa ahora',
                 ),
                 Text(
                   'Terminos y condiciones de uso',
@@ -61,6 +66,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: const EdgeInsets.only(top: 40.0),
       padding: const EdgeInsets.symmetric(horizontal: 50.0),
@@ -85,10 +91,20 @@ class __FormState extends State<_Form> {
           ),
           BlueButton(
               text: 'Registrar',
-              onPress: () {
-                print('Email COntroller: ${emailController.text}');
-                print('Password COntroller: ${passwordController.text}');
-              })
+              onPress: authService.loadingAuth
+                  ? null
+                  : () async {
+                    FocusScope.of(context).unfocus();
+                      final res = await authService.register(
+                          nameController.text.trim(),
+                          emailController.text.trim(),
+                          passwordController.text.trim());
+                      if (res == true) {
+                        Navigator.pushReplacementNamed(context, 'users');
+                      } else {
+                        showAlert(context, 'Login incorrecto', res);
+                      }
+                    })
         ],
       ),
     );

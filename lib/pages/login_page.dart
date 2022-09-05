@@ -1,8 +1,11 @@
+import 'package:chat/helpers/show_alert.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:chat/widgets/blue_button.dart';
 import 'package:chat/widgets/custom_textfield.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -19,9 +22,15 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                Logo(title: 'Messenger',),
+                Logo(
+                  title: 'Messenger',
+                ),
                 _Form(),
-                Labels(route: 'register', title: '¿No tienes cuenta?', subTitle: 'Crea una ahora',),
+                Labels(
+                  route: 'register',
+                  title: '¿No tienes cuenta?',
+                  subTitle: 'Crea una ahora',
+                ),
                 Text(
                   'Terminos y condiciones de uso',
                   style: TextStyle(fontWeight: FontWeight.w200),
@@ -56,6 +65,7 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: const EdgeInsets.only(top: 40.0),
       padding: const EdgeInsets.symmetric(horizontal: 50.0),
@@ -75,10 +85,22 @@ class __FormState extends State<_Form> {
           ),
           BlueButton(
               text: 'Ingresar',
-              onPress: () {
-                print('Email COntroller: ${emailController.text}');
-                print('Password COntroller: ${passwordController.text}');
-              })
+              onPress: authService.loadingAuth
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus();
+                      final loginOk = await authService.login(
+                          emailController.text.trim(),
+                          passwordController.text.trim());
+
+                      if (loginOk) {
+                        //TODO: Connect socketServer
+                        Navigator.pushReplacementNamed(context, 'users');
+                      } else {
+                        showAlert(context, 'Incorrect login',
+                            'Pls review your credentials');
+                      }
+                    })
         ],
       ),
     );
