@@ -1,5 +1,7 @@
-import 'package:chat/models/user.dart';
+import 'package:chat/models/users_response.dart';
 import 'package:chat/services/auth_service.dart';
+import 'package:chat/services/socket_service.dart';
+import 'package:chat/services/users_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -12,14 +14,19 @@ class UsersPage extends StatefulWidget {
 }
 
 class _UsersPageState extends State<UsersPage> {
-  final users = [
-    User(online: true, email: 'maria@email.com', name: 'Maria', uid: '1'),
-    User(uid: '2', online: false, email: 'melissa@email.com', name: 'Melissa'),
-    User(uid: '3', online: true, email: 'roberto@email.com', name: 'Roberto'),
-  ];
+
+  final userService = UsersService();
+  List<User> users = [];
 
   final RefreshController _refreshController =
       RefreshController(initialRefresh: false);
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    _onLoading();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -31,6 +38,7 @@ class _UsersPageState extends State<UsersPage> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
     final user = authService.user;
     
     return Scaffold(
@@ -48,7 +56,7 @@ class _UsersPageState extends State<UsersPage> {
             color: Colors.black54,
           ),
           onPressed: () {
-            //TODO: Desconectar el socket server
+            socketService.disconnect();
             AuthService.deleteToken();
             Navigator.pushReplacementNamed(context, 'login');
           },
@@ -56,11 +64,11 @@ class _UsersPageState extends State<UsersPage> {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 10.0),
-            child: Icon(
+            child: socketService.serverStatus == ServerStatus.Online ? Icon(
               Icons.check_circle,
               color: Colors.blue.shade400,
-            ),
-            //child: Icon(Icons.offline_bolt, color: Colors.red,)
+            ) :
+            const Icon(Icons.offline_bolt, color: Colors.red,)
           )
         ],
       ),
@@ -82,25 +90,26 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   _onRefresh() async {
-    // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 1000));
+    //* monitor network fetch
+    users = await userService.getUsers();
+    //await Future.delayed(Duration(milliseconds: 1000));
     // if failed,use refreshFailed()
-    final int usersLng = users.length + 1;
-    print('Algo sabrosano $usersLng');
-    users.add(User(
-        uid: '$usersLng',
-        online: true,
-        email: 'name$usersLng@mail.com',
-        name: 'name'));
+    //final int usersLng = users.length + 1;
+    //print('Algo sabrosano $usersLng');
+    // users.add(User(
+    //     uid: '$usersLng',
+    //     online: true,
+    //     email: 'name$usersLng@mail.com',
+    //     name: 'name'));
     if (mounted) setState(() {});
     _refreshController.refreshCompleted();
   }
 
   _onLoading() async {
-    // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 1000));
-    // if failed,use loadFailed(),if no data return,use LoadNodata()
-
+    //* monitor network fetch
+    //await Future.delayed(Duration(milliseconds: 1000));
+    users = await userService.getUsers();
+    //* if failed,use loadFailed(),if no data return,use LoadNodata()
     if (mounted) setState(() {});
     _refreshController.loadComplete();
   }

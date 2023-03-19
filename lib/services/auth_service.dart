@@ -17,13 +17,19 @@ class AuthService with ChangeNotifier {
 
   static Future<String?> getToken() async {
     const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'token');
+    final token = await storage.read(key: 'token', aOptions: const AndroidOptions(
+        encryptedSharedPreferences: true,
+      ),
+        iOptions: const IOSOptions(
+        accountName: null,
+      ));
+    print('token b $token');
     return token;
   }
 
   static Future<void> deleteToken() async {
     const storage = FlutterSecureStorage();
-    await storage.delete(key: 'token',aOptions: const AndroidOptions(
+    await storage.delete(key: 'token', aOptions: const AndroidOptions(
         encryptedSharedPreferences: true,
       ),
         iOptions: const IOSOptions(
